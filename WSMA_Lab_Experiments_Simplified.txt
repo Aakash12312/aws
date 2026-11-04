@@ -1,0 +1,215 @@
+WEB AND SOCIAL MEDIA ANALYTICS LAB - ALL EXPERIMENTS
+
+
+EXPERIMENT 1: Preprocessing Text Document using NLTK
+(Stop word elimination, Stemming, Lemmatization, POS tagging, Lexical analysis)
+----------------------------------------------------------------------
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk.tokenize import word_tokenize, sent_tokenize
+
+for p in ['punkt', 'punkt_tab', 'stopwords', 'wordnet',
+          'averaged_perceptron_tagger', 'averaged_perceptron_tagger_eng']:
+    nltk.download(p, quiet=True)
+
+text = "NLTK is a leading platform. It provides easy-to-use interfaces."
+words = word_tokenize(text)
+
+print(sent_tokenize(text))                                  # Lexical analysis
+print(words)
+print([w for w in words if w.lower() not in stopwords.words('english')])   # Stop words
+print([PorterStemmer().stem(w) for w in ["running", "runs", "ran"]])       # Stemming
+print([WordNetLemmatizer().lemmatize(w, 'v') for w in ["plays", "played", "playing"]])  # Lemmatization
+print(nltk.pos_tag(words))                                  # POS tagging
+
+
+EXPERIMENT 2: Sentiment Analysis on Customer Reviews of Products
+----------------------------------------------------------------------
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+nltk.download('vader_lexicon', quiet=True)
+sia = SentimentIntensityAnalyzer()
+
+reviews = ["This product is amazing! I love it.",
+           "The quality is bad, and I am very disappointed.",
+           "It works okay, but it's not the best.",
+           "Pretty good product for the price."]
+
+for r in reviews:
+    print(r, sia.polarity_scores(r))
+
+
+EXPERIMENT 3: Web Analytics (Web Usage Data, Clickstream, Hyperlink Data)
+----------------------------------------------------------------------
+import re
+import pandas as pd
+import networkx as nx
+import matplotlib.pyplot as plt
+
+log = """192.168.1.1 - - [03/Dec/2024:10:00:00 +0000] "GET /index.html HTTP/1.1" 200 1024
+192.168.1.1 - - [03/Dec/2024:10:01:00 +0000] "GET /about.html HTTP/1.1" 200 512
+192.168.1.1 - - [03/Dec/2024:10:02:00 +0000] "GET /contact.html HTTP/1.1" 200 256
+192.168.1.2 - - [03/Dec/2024:10:00:30 +0000] "GET /index.html HTTP/1.1" 200 1024
+192.168.1.2 - - [03/Dec/2024:10:01:30 +0000] "GET /products.html HTTP/1.1" 200 2048"""
+
+# Web usage data
+rows = [re.match(r'(\S+) - - \[(.*?)\] "(\w+) (\S+) .*?" (\d+) (\d+)', l).groups()
+        for l in log.splitlines()]
+df = pd.DataFrame(rows, columns=['IP', 'Time', 'Method', 'URL', 'Status', 'Bytes'])
+print(df)
+
+# Clickstream analysis
+clicks = df.groupby('IP')['URL'].apply(list)
+print(clicks)
+
+# Hyperlink data
+edges = [(p[i], p[i+1]) for p in clicks for i in range(len(p) - 1)]
+nx.draw_networkx(nx.DiGraph(edges), node_color='skyblue', node_size=2000)
+plt.show()
+
+
+EXPERIMENT 4: Search Engine Optimization - Implements Spamdexing
+----------------------------------------------------------------------
+import requests
+from collections import Counter
+from bs4 import BeautifulSoup
+
+soup = BeautifulSoup(requests.get('https://example.com').text, 'html.parser')
+
+print("Title:", soup.title.string)
+print("H1 tags:", [h.text for h in soup.find_all('h1')])
+
+# Spamdexing check: keyword stuffing
+words = soup.get_text().lower().split()
+print("Most repeated words:", Counter(words).most_common(3))
+
+
+EXPERIMENT 5: Google Analytics - Conversion Statistics and Visitor Profiles
+----------------------------------------------------------------------
+import random
+import pandas as pd
+
+# Conversion statistics
+conv = pd.DataFrame({
+    "Date": pd.date_range("2023-11-01", periods=30),
+    "Visitors": [random.randint(500, 1000) for _ in range(30)],
+    "Goal Completions": [random.randint(50, 200) for _ in range(30)]})
+conv["Conversion Rate %"] = conv["Goal Completions"] / conv["Visitors"] * 100
+print(conv.head())
+
+# Visitor profiles
+visitors = pd.DataFrame({
+    "Country": ["USA", "India", "Germany", "UK", "Canada"],
+    "Age Group": ["18-24", "25-34", "35-44", "45-54", "55+"],
+    "Users": [random.randint(1000, 5000) for _ in range(5)]})
+print(visitors)
+
+
+EXPERIMENT 6: Google Analytics - Traffic Sources
+----------------------------------------------------------------------
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+sources = ['Organic Search', 'Direct', 'Referral', 'Social Media', 'Paid Search']
+df = pd.DataFrame({s: np.random.randint(50, 500, 30) for s in sources})
+
+df.plot(figsize=(12, 6), title='Traffic Sources Over 30 Days')
+plt.xlabel('Day')
+plt.ylabel('Traffic')
+plt.show()
+
+
+EXPERIMENT 7: Data Processing Techniques (Cleaning, Normalization, Integration)
+----------------------------------------------------------------------
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+
+df = pd.read_csv('Toyota.csv')
+
+# Data cleaning
+for c in ['KM', 'HP']:
+    df[c] = pd.to_numeric(df[c], errors='coerce')
+for c in ['Age', 'MetColor', 'KM', 'HP']:
+    df[c] = df[c].fillna(df[c].mean())
+df['FuelType'] = df['FuelType'].fillna('Unknown')
+df = df.drop_duplicates()
+
+# Data transformation - Normalization
+cols = ['Age', 'KM', 'HP', 'CC', 'Weight']
+df[cols] = MinMaxScaler().fit_transform(df[cols])
+print(df.head())
+
+# Data integration
+extra = pd.DataFrame({'sno': [1, 2, 3], 'Safety_Rating': [5, 4, 3]})
+print(pd.merge(df, extra, on='sno', how='left').head())
+
+
+EXPERIMENT 8: Implementation of Decision Tree Algorithm
+----------------------------------------------------------------------
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+
+data = pd.read_csv('tennis.csv').apply(LabelEncoder().fit_transform)
+X = data[['outlook', 'temp', 'humidity', 'windy']]
+y = data['play']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+clf = DecisionTreeClassifier(criterion='entropy').fit(X_train, y_train)
+
+print("Accuracy:", clf.score(X_test, y_test))
+plot_tree(clf)
+plt.show()
+
+
+EXPERIMENT 9: Classification of Data using Logistic Regression
+----------------------------------------------------------------------
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+
+data = pd.read_csv('Iris.csv')
+X = data[['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm']]
+y = data['Species']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+model = LogisticRegression(max_iter=200).fit(X_train, y_train)
+
+print("Accuracy:", model.score(X_test, y_test))
+
+
+EXPERIMENT 10: Classification of Data using K-Nearest Neighbor Approach
+----------------------------------------------------------------------
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix
+
+data = pd.read_csv('Iris.csv')
+X = data[['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm']]
+y = data['Species']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+knn = KNeighborsClassifier(n_neighbors=3).fit(X_train, y_train)
+
+print("Accuracy:", knn.score(X_test, y_test))
+print(confusion_matrix(y_test, knn.predict(X_test)))
+
+
+EXPERIMENT 11: Implementation of K-Means Algorithm
+----------------------------------------------------------------------
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+
+X, _ = make_blobs(n_samples=300, centers=4, cluster_std=0.6, random_state=0)
+kmeans = KMeans(n_clusters=4, n_init=10).fit(X)
+
+plt.scatter(X[:, 0], X[:, 1], c=kmeans.labels_)
+plt.scatter(*kmeans.cluster_centers_.T, c='red', marker='X', s=200)
+plt.show()
